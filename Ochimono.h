@@ -5,6 +5,7 @@
 #include "Block.h"
 #include "common.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 
 // ゲーム本体
@@ -63,11 +64,11 @@ class Ochimono {
     // 次のブロックを画面に配置
     void _dropNextBlock();
     // ゲーム継続可能？
-    void _canContinue();
+    bool _canContinue();
     // ゲームオーバー時の処理
     void _gameOver();
     // 指定したブロックが衝突した？
-    void _isCollided(Block &block);
+    bool _isCollided(Block *block);
     // ブロック衝突時の処理
     void _collisionHandler();
     // ブロックの配置

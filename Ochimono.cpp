@@ -29,34 +29,34 @@ void Ochimono::mainLoop() {
 
     if (this->_isGameOver)   return this->_gameOver();
 
-    this->currentBlock->step();
+    this->_currentBlock->step();
     // ゲームオーバー判定
     if (! this->_canContinue()) {
         this->_isGameOver   = true;
     }
 
     // 衝突判定
-    if (this->_isCollided(this->currentBlock)) {
+    if (this->_isCollided(this->_currentBlock)) {
         this->_collisionHandler();
     }
 
 }
 
-void Ochimono::pause(boolean is_pause) {
+void Ochimono::pause(bool is_pause) {
     // 作るかも
 }
 
 void Ochimono::moveBlock(direction dir) {
-    this->currentBlock->move(dir);
+    this->_currentBlock->move(dir);
 
-    if (this->_isCollided(this->currentBlock)) {
+    if (this->_isCollided(this->_currentBlock)) {
         // 下方向移動だったなら配置する
         if (dir == dir_down) {
             this->_collisionHandler();
         }
         // それ以外ならば単純に位置を戻す
         else {
-            this->currentBlock->undo();
+            this->_currentBlock->undo();
         }
     }
 }
@@ -95,7 +95,7 @@ void Ochimono::_dropNextBlock() {
     this->_nextBlock    = this->_generateBlock();
 }
 
-void Ochimono::_canContinue() {
+bool Ochimono::_canContinue() {
     if (this->_board->get(2, 0) != piece_none) {
         // 出現口がふさがっている＝NG
         return false;
@@ -107,10 +107,10 @@ void Ochimono::_gameOver () {
     // なんかやる
 }
 
-void Ochimono::_isCollided(Block &block) {
+bool Ochimono::_isCollided(Block *block) {
     int i;
-    for (i = 0 ; i < this->currentBlock->size() ; i++) {
-        BlockPiece p    = this->currentBlock->getPiece(i);
+    for (i = 0 ; i < block->size() ; i++) {
+        BlockPiece p    = block->getBlockPiece(i);
         if (this->_board->get(p.x, p.y) != piece_none) {
             return true;
         }

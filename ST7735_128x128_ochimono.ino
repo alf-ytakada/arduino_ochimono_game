@@ -26,17 +26,21 @@ void setup() {
 
   // ピン下側が画面下になるようにローテートする
   tft.setRotation(2);
-
+  Serial.println("setup()");
   game  = new Ochimono(6, 12);
   game->start();
+  Serial.println("setup done");
 }
 
-void loop() {
+int cnt = 0;
+int pre = millis();
 
+void loop() {
+  cnt++;
   game->mainLoop();
   delay(20);
-    int now = millis();
-    if (now - pre >= 1000) {
+  int now = millis();
+  if (now - pre >= 1000) {
       Serial.println(String("fps = ") + ((float)cnt / ((now - pre) / 1000)));
       cnt = 0;
       pre = now;
