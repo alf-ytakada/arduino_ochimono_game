@@ -9,20 +9,20 @@
 
 class Board {
   public:
-    uint8_t length;
+    uint8_t size;
     uint8_t width;
     uint8_t height;
     // コンストラクタ
     Board(uint8_t width, uint8_t height) {
         this->_pieces  = new piece[width * height + 1];
-        this->length   = width * height;
+        this->size     = width * height;
         this->width    = width;
         this->height   = height;
         int i;
-        for (i = 0 ; i < length ; i++) {
+        for (i = 0 ; i < this->size ; i++) {
             this->_pieces[i] = piece_none;
         }
-        this->_pieces[this->length] = piece_end;
+        this->_pieces[this->size] = piece_end;
     };
 
     // 指定位置のpiece

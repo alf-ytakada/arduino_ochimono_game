@@ -1,55 +1,33 @@
-#ifndef __OCHIMONO_H_INCLUDED__
-#define __OCHIMONO_H_INCLUDED__
+#ifndef __DRAWER_H_INCLUDED__
+#define __DRAWER_H_INCLUDED__
 
+#include "Ochimono.h"
+#include "Board.h"
+#include "Block.h"
 #include <TFT_ST7735.h>
 
-// 移動方向
-enum direction {
-    dir_left,
-    dir_down,
-    dir_right,
-    dir_end,
-};
 
-// ゲーム本体
-// 描画は描画クラスに任せる
-class Ochimono {
+class Drawer {
   public:
-    Ochimono(TFT_ST7735 *tft) {
-        _tft    = tft;
-        init();
+    TFT_ST7735 *tft;
+    Drawer(TFT_ST7735 *tft) {
+        this->tft   = tft;
+
+        this->_screenWidth  = tft->width();
+        this->_screenHeight = tft->height();
     }
 
-    //////////////////
-    //// ユーザ用関数
-    // ゲーム初期化
-    void init();
+    // 現在の状態を描画する
+    void draw(Ochimono *game);
 
-    // ゲームスタート
-    void start();
+    void drawBoard(Board *board);
+    void drawBlock(Block *block);
 
-    // ポーズ(true:ポーズする、false:ポーズ解除)
-    void pause(boolean is_pause);
+  private:
+    uint8_t _blockSize  = 10;
+    uint8_t _screenWidth;
+    uint8_t _screenHeight;
 
-    // ブロックを動かす
-    void moveBlock(direction dir);
-
-    // ブロックを回転する
-    void rotateBlock(direction dir);
-    //////////////////
-
-    //////////////////
-    //// 描画クラス用関数
-    // 
-
-
-    //////////////////
-  protected:
-    TFT_ST7735 *_tft;
-    
 };
-
-
-
 
 #endif

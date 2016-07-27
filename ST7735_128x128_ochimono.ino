@@ -9,6 +9,7 @@
 #include <SPI.h>
 #include <TFT_ST7735.h>
 #include "Ochimono.h"
+#include "Drawer.h"
 
 #define __CS1 10
 #define __DC  9
@@ -17,9 +18,10 @@
 TFT_ST7735 tft = TFT_ST7735(__CS1, __DC);
 
 Ochimono *game;
+Drawer *drawer;
 
 void setup() {
-  // put your setup code here, to run once:j
+  // put your setup code here, to run once:
   tft.begin();
   Serial.begin(38400);
   randomSeed(analogRead(0));
@@ -29,6 +31,7 @@ void setup() {
   Serial.println("setup()");
   game  = new Ochimono(6, 12);
   game->start();
+  drawer = new Drawer(&tft);
   Serial.println("setup done");
 }
 
@@ -38,6 +41,7 @@ int pre = millis();
 void loop() {
   cnt++;
   game->mainLoop();
+  drawer->draw(game);
   delay(20);
   int now = millis();
   if (now - pre >= 1000) {
