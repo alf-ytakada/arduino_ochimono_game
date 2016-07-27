@@ -12,12 +12,14 @@ piece Block::getColor() {
     return this->color;
 }
 
-void Block::step() {
+bool Block::step() {
     this->_step--;
     if (this->_step <= 0) {
         this->move(dir_down);
         this->_step = this->defaultStep;
+        return true;
     }
+    return false;
 }
 
 

@@ -45,7 +45,8 @@ class Block {
     piece getColor();
 
     // 1ステップ進める 0になったら一つ下に動く
-    void step();
+    // true: 動いた
+    bool step();
 
     // 動かす
     void move(direction dir);

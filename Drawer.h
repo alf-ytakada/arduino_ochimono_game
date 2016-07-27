@@ -4,6 +4,7 @@
 #include "Ochimono.h"
 #include "Board.h"
 #include "Block.h"
+#include "common.h"
 #include <TFT_ST7735.h>
 
 
@@ -21,12 +22,15 @@ class Drawer {
     void draw(Ochimono *game);
 
     void drawBoard(Board *board);
-    void drawBlock(Block *block);
+    void drawCurrentBlock(Block *block);
+    void drawNextBlock(Block *block);
 
   private:
     uint8_t _blockSize  = 10;
     uint8_t _screenWidth;
     uint8_t _screenHeight;
+
+    uint16_t _translateColor(piece color);
 
 };
 

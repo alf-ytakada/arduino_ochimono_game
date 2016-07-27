@@ -14,6 +14,15 @@ class Ochimono {
   public:
     uint8_t width;
     uint8_t height;
+
+    // 再描画フラグ
+    // trueならば該当部分の再描画が必要
+    // 画面描画が遅いので、毎フレーム描画はできない。
+    bool redrawBoard;
+    bool redrawNextBlock;
+    bool redrawCurrentBlock;
+
+
     // コンストラクタ
     // width: 盤面の横幅、height:盤面の縦幅
     Ochimono(uint8_t width, uint8_t height) {
@@ -41,6 +50,9 @@ class Ochimono {
 
     // ブロックを回転する
     void rotateBlock(direction dir);
+
+    // ゲームオーバー？
+    bool isGameOver();
     //////////////////
 
     //////////////////

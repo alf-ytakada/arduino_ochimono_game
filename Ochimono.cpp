@@ -14,6 +14,10 @@ void Ochimono::init() {
     }
     this->_isStarted   = false;
     this->_isGameOver  = false;
+
+    this->redrawBoard       = true;
+    this->redrawNextBlock   = true;
+    this->redrawCurrentBlock    = true;
 }
 
 
@@ -29,7 +33,11 @@ void Ochimono::mainLoop() {
 
     if (this->_isGameOver)   return this->_gameOver();
 
-    this->_currentBlock->step();
+    bool stepped    = this->_currentBlock->step();
+    if (stepped) {
+        this->redrawCurrentBlock  = true;
+        this->redrawBoard   = true;
+    }
     // ゲームオーバー判定
     if (! this->_canContinue()) {
         this->_isGameOver   = true;
@@ -38,6 +46,9 @@ void Ochimono::mainLoop() {
     // 衝突判定
     if (this->_isCollided(this->_currentBlock)) {
         this->_collisionHandler();
+        this->redrawBoard   = true;
+        this->redrawCurrentBlock    = true;
+        this->redrawNextBlock    = true;
     }
 
 }
@@ -85,6 +96,10 @@ Block *Ochimono::_generateBlock() {
     // TODO Lv調整
     uint8_t lv  = 10;
     return new Block(2, 0, pieceColor, lv);
+}
+
+bool Ochimono::isGameOver() {
+    return this->_isGameOver;
 }
 
 void Ochimono::_dropNextBlock() {
