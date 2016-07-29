@@ -86,6 +86,10 @@ void loop() {
   if (pressed(PIN_RIGHT)) {
     game.moveBlock(dir_right);
   }
+  if (pressed(PIN_ROTATE)) {
+    game.rotateBlock(dir_right);
+  }
+  
   game.mainLoop();
   if (game.redrawBoard) {
     drawer.drawBoard(game.getBoard());

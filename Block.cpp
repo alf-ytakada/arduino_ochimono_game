@@ -60,3 +60,26 @@ void Block::undo() {
     // undoは何度もさせない
     this->_movedDir = dir_end;
 }
+
+void Block::rotate(direction dir) {
+    // 回転行列 デフォルトは90度 (dir_right)
+    uint8_t rotMatrix[][2]  = {{0, -1}, {1, 0}};
+
+    if (dir == dir_left) {
+        // -90度回転行列にする (dir_left)
+        rotMatrix[0][1] = 1;
+        rotMatrix[1][0] = -1;
+    }
+
+    // 原点基点で回転
+    int i;
+    for (i = 0 ; i < this->size() ; i++) {
+        uint8_t oldX    = blockPiece[i].x;
+        uint8_t oldY    = blockPiece[i].y;
+
+        uint8_t nx  = (this->x - oldX) * rotMatrix[0][0] + (this->y - oldY) * rotMatrix[0][1];
+        uint8_t ny  = (this->x - oldX) * rotMatrix[1][0] + (this->y - oldY) * rotMatrix[1][1];
+        blockPiece[i].x = this->x + nx;
+        blockPiece[i].y = this->y + ny;
+    }
+}

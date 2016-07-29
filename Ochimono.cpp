@@ -76,6 +76,17 @@ void Ochimono::moveBlock(direction dir) {
 }
 
 void Ochimono::rotateBlock(direction dir) {
+    if (this->_currentBlock) {
+        this->_currentBlock->rotate(dir);
+        // もし回転後がヒットしちゃったら戻す
+        if (this->_isCollided(this->_currentBlock)) {
+            this->_currentBlock->rotate((dir == dir_left) ? dir_right : dir_left);
+        }
+        else {
+            this->redrawBoard   = true;
+            this->redrawCurrentBlock    = true;
+        }
+    }
 }
 
 Board *Ochimono::getBoard() {
@@ -147,8 +158,37 @@ void Ochimono::_collisionHandler() {
 
 void Ochimono::_placeCurrentBlock() {
     int i;
-    for (i = 0 ; i < this->_currentBlock->size() ; i++) {
-        BlockPiece p    = this->_currentBlock->getBlockPiece(i);
-        this->_board->set(p.x, p.y, this->_currentBlock->getColor());
+    // alias
+    Block *cb   = this->_currentBlock;
+
+
+    // Y座標が大きい物順に並べたBlockPieceのindex保持配列。
+    uint8_t *ySortedIdx = new uint8_t[this->_currentBlock->size()];
+
+    for (i = 0 ; i < cb->size() ; i++) {
+        ySortedIdx[i]   = i;
+        for (int j = i ; j > 0 ; j--) {
+            if (cb->getBlockPiece(j).y > cb->getBlockPiece(j-1).y) {
+                uint8_t tmp     = ySortedIdx[j-1];
+                ySortedIdx[j-1] = ySortedIdx[j];
+                ySortedIdx[j]    = tmp;
+            }
+        }
     }
+
+    for (i = 0 ; i < this->_currentBlock->size() ; i++) {
+        BlockPiece p    = this->_currentBlock->getBlockPiece(ySortedIdx[i]);
+        // 下に落とせるだけ落とす
+        uint8_t placeY  = this->_getDroppableY(p.x, p.y);
+
+        this->_board->set(p.x, placeY, this->_currentBlock->getColor());
+    }
+}
+
+
+uint8_t Ochimono::_getDroppableY(uint8_t x, uint8_t y) {
+    while (this->_board->get(x, y+1) == piece_none) {
+        y++;
+    }
+    return y;
 }

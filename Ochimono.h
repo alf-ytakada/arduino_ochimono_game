@@ -85,6 +85,8 @@ class Ochimono {
     void _collisionHandler();
     // ブロックの配置
     void _placeCurrentBlock();
+    // 配置可能なY座標の最大値
+    uint8_t _getDroppableY(uint8_t x, uint8_t y);
     
 };
 

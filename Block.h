@@ -54,6 +54,10 @@ class Block {
     // 先ほど動かしたのをなかったことにする。
     void undo();
 
+    // 回転
+    // dir_left, dir_rightのみ対応
+    void rotate(direction dir);
+
   private:
     direction _movedDir;
     uint8_t _step;
