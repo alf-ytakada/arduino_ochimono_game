@@ -1,7 +1,7 @@
 #ifndef __COMMON_H_INCLUDED__
 #define __COMMON_H_INCLUDED__
 
-// ˆÚ“®•ûŒü
+// ç§»å‹•æ–¹å‘
 enum direction {
     dir_up,
     dir_left,
@@ -11,8 +11,8 @@ enum direction {
 };
 
 
-// ƒuƒƒbƒN‚É”z’u‚³‚ê‚é‚à‚Ì
-// ÂEÔE—ÎE‡E‰©
+// ãƒ–ãƒ­ãƒƒã‚¯ã«é…ç½®ã•ã‚Œã‚‹ã‚‚ã®
+// é’ãƒ»èµ¤ãƒ»ç·‘ãƒ»ç´«ãƒ»é»„
 enum piece {
     piece_none = 0,
     piece_blue,
@@ -20,7 +20,7 @@ enum piece {
     piece_green,
     piece_magenta,
     piece_yellow,
-    piece_end, // ”Ô•º
+    piece_end, // ç•ªå…µ
 };
 
 

@@ -57,6 +57,6 @@ void Block::undo() {
     else if (_movedDir == dir_down)   move(dir_up);
     else if (_movedDir == dir_up)     move(dir_down);
     
-    // undo‚Í‰½“x‚à‚³‚¹‚È‚¢
+    // undoã¯ä½•åº¦ã‚‚ã•ã›ãªã„
     this->_movedDir = dir_end;
 }

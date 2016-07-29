@@ -14,6 +14,13 @@
 #define __CS1 10
 #define __DC  9
 
+//#define PIN_UP    2
+#define PIN_LEFT  3
+#define PIN_DOWN  4
+#define PIN_RIGHT 5
+
+#define PIN_ROTATE  6
+
 
 TFT_ST7735 tft = TFT_ST7735(__CS1, __DC);
 
@@ -22,6 +29,12 @@ Drawer drawer = Drawer(&tft);;
 
 void setup() {
   // put your setup code here, to run once:
+  //pinMode(PIN_UP,   INPUT_PULLUP);
+  pinMode(PIN_DOWN, INPUT_PULLUP);
+  pinMode(PIN_LEFT, INPUT_PULLUP);
+  pinMode(PIN_RIGHT,  INPUT_PULLUP);
+  pinMode(PIN_ROTATE, INPUT_PULLUP);
+  
   tft.begin();
   Serial.begin(38400);
   //randomSeed(analogRead(0));
@@ -35,11 +48,44 @@ void setup() {
   Serial.println("setup done"); delay(20);
 }
 
+// ボタンが押されたか？
+int last_pressed_times[14] = {0};
+bool pressing[14] = {false};
+bool pressed(int pin) {
+  int now = millis();
+  int hl  = digitalRead(pin);
+  if (hl == LOW) {
+    if (pressing[pin] == false && now - last_pressed_times[pin] > 50) {
+      // 50ms立っているならば押したとする
+      pressing[pin] = true;
+      last_pressed_times[pin] = now;
+      return true;
+    }
+    else {
+      last_pressed_times[pin] = now;
+    }
+  }
+  else {
+    pressing[pin] = false;
+  }
+  return false;
+}
+
+
 int cnt = 0;
 int pre = millis();
 
 void loop() {
   cnt++;
+  if (pressed(PIN_LEFT)) {
+    game.moveBlock(dir_left);
+  }
+  if (pressed(PIN_DOWN)) {
+    game.moveBlock(dir_down);
+  }
+  if (pressed(PIN_RIGHT)) {
+    game.moveBlock(dir_right);
+  }
   game.mainLoop();
   if (game.redrawBoard) {
     drawer.drawBoard(game.getBoard());
@@ -53,7 +99,7 @@ void loop() {
     drawer.drawNextBlock(game.getNextBlock());
     game.redrawNextBlock  = false;
   }
-  delay(100);
+  delay(10);
   int now = millis();
   if (now - pre >= 1000) {
       Serial.println(String("fps = ") + ((float)cnt / ((now - pre) / 1000)));

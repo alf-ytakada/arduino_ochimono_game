@@ -7,9 +7,9 @@ void Drawer::draw(Ochimono *game) {
     Block *nextBlock    = game->getNextBlock();
 
 
-    // ƒ{[ƒh
+    // ãƒœãƒ¼ãƒ‰
     this->drawBoard(board);
-    // ƒuƒƒbƒN
+    // ãƒ–ãƒ­ãƒƒã‚¯
     this->drawCurrentBlock(currentBlock);
     this->drawNextBlock(nextBlock);
 }
@@ -24,7 +24,7 @@ void Drawer::drawBoard(Board *board) {
         WHITE
     );
 
-    // ’†g
+    // ä¸­èº«
     int x, y;
     uint8_t offsetX = 1, offsetY    = 1;
     for (y = 0 ; y < board->height ; y++) {

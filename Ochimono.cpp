@@ -38,12 +38,12 @@ void Ochimono::mainLoop() {
         this->redrawCurrentBlock  = true;
         this->redrawBoard   = true;
     }
-    // ƒQ[ƒ€ƒI[ƒo[”»’è
+    // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼åˆ¤å®š
     if (! this->_canContinue()) {
         this->_isGameOver   = true;
     }
 
-    // Õ“Ë”»’è
+    // è¡çªåˆ¤å®š
     if (this->_isCollided(this->_currentBlock)) {
         this->_collisionHandler();
         this->redrawBoard   = true;
@@ -54,22 +54,25 @@ void Ochimono::mainLoop() {
 }
 
 void Ochimono::pause(bool is_pause) {
-    // ì‚é‚©‚à
+    // ä½œã‚‹ã‹ã‚‚
 }
 
 void Ochimono::moveBlock(direction dir) {
     this->_currentBlock->move(dir);
 
     if (this->_isCollided(this->_currentBlock)) {
-        // ‰º•ûŒüˆÚ“®‚¾‚Á‚½‚È‚ç”z’u‚·‚é
+        // ä¸‹æ–¹å‘ç§»å‹•ã ã£ãŸãªã‚‰é…ç½®ã™ã‚‹
         if (dir == dir_down) {
             this->_collisionHandler();
         }
-        // ‚»‚êˆÈŠO‚È‚ç‚Î’Pƒ‚ÉˆÊ’u‚ð–ß‚·
+        // ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ç´”ã«ä½ç½®ã‚’æˆ»ã™
         else {
             this->_currentBlock->undo();
         }
     }
+    this->redrawBoard   = true;
+    this->redrawCurrentBlock    = true;
+    this->redrawNextBlock    = true;
 }
 
 void Ochimono::rotateBlock(direction dir) {
@@ -93,8 +96,8 @@ Block *Ochimono::_generateBlock() {
     uint8_t color   = 1 + rand() % (piece_end -1);
     piece pieceColor    = (piece)color;
 
-    // TODO Lv’²®
-    uint8_t lv  = 10;
+    // TODO Lvèª¿æ•´
+    uint8_t lv  = 100;
     return new Block(2, 0, pieceColor, lv);
 }
 
@@ -112,14 +115,14 @@ void Ochimono::_dropNextBlock() {
 
 bool Ochimono::_canContinue() {
     if (this->_board->get(2, 0) != piece_none) {
-        // oŒ»Œû‚ª‚Ó‚³‚ª‚Á‚Ä‚¢‚éNG
+        // å‡ºç¾å£ãŒãµã•ãŒã£ã¦ã„ã‚‹ï¼NG
         return false;
     }
     return true;
 }
 
 void Ochimono::_gameOver () {
-    // ‚È‚ñ‚©‚â‚é
+    // ãªã‚“ã‹ã‚„ã‚‹
 }
 
 bool Ochimono::_isCollided(Block *block) {
@@ -134,11 +137,11 @@ bool Ochimono::_isCollided(Block *block) {
 }
 
 void Ochimono::_collisionHandler() {
-    // êŠ‚ð–ß‚µ‚Ä
+    // å ´æ‰€ã‚’æˆ»ã—ã¦
     this->_currentBlock->undo();
-    // ”z’u‚·‚é
+    // é…ç½®ã™ã‚‹
     this->_placeCurrentBlock();
-    // ŽŸ‚ÌBlock‚ð”z’u‚·‚é
+    // æ¬¡ã®Blockã‚’é…ç½®ã™ã‚‹
     this->_dropNextBlock();
 }
 
