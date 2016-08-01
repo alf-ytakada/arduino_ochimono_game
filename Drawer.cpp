@@ -42,7 +42,7 @@ void Drawer::drawCurrentBlock(Block *block) {
     int i;
     for (i = 0 ; i < block->size() ; i++) {
         BlockPiece p    = block->getBlockPiece(i);
-        uint16_t color   = this->_translateColor(block->getColor());
+        uint16_t color   = this->_translateColor(p.color);
         uint8_t left    = 1 + this->_blockSize * p.x;
         uint8_t top     = 1 + this->_blockSize * p.y;
         // this->tft->fillRect(left, top, this->_blockSize, this->_blockSize, color);

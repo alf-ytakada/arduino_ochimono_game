@@ -14,6 +14,7 @@ void Ochimono::init() {
     }
     this->_isStarted   = false;
     this->_isGameOver  = false;
+    this->_isDeleting  = false;
 
     this->redrawBoard       = true;
     this->redrawNextBlock   = true;
@@ -33,6 +34,8 @@ void Ochimono::mainLoop() {
 
     if (this->_isGameOver)   return this->_gameOver();
 
+    if (this->_isDeleting)   return this->_deleteBlock();
+
     bool stepped    = this->_currentBlock->step();
     if (stepped) {
         this->redrawCurrentBlock  = true;
@@ -46,6 +49,10 @@ void Ochimono::mainLoop() {
     // 衝突判定
     if (this->_isCollided(this->_currentBlock)) {
         this->_collisionHandler();
+        if (this->_canDeleteBlock()) {
+            // 削除出来るものがあったら、削除シーケンスへ
+            this->_isDeleting = true;
+        }
         this->redrawBoard   = true;
         this->redrawCurrentBlock    = true;
         this->redrawNextBlock    = true;
@@ -104,12 +111,14 @@ Block *Ochimono::getNextBlock() {
 ///////////////////
 // private method
 Block *Ochimono::_generateBlock() {
-    uint8_t color   = 1 + rand() % (piece_end -1);
-    piece pieceColor    = (piece)color;
+    uint8_t color1   = 1 + rand() % (piece_end -1);
+    uint8_t color2   = 1 + rand() % (piece_end -1);
+    piece pc1       = (piece)color1;
+    piece pc2       = (piece)color2;
 
     // TODO Lv調整
     uint8_t lv  = 100;
-    return new Block(2, 0, pieceColor, lv);
+    return new Block(2, 0, pc1, pc2, lv);
 }
 
 bool Ochimono::isGameOver() {
@@ -154,6 +163,7 @@ void Ochimono::_collisionHandler() {
     this->_placeCurrentBlock();
     // 次のBlockを配置する
     this->_dropNextBlock();
+
 }
 
 void Ochimono::_placeCurrentBlock() {
@@ -181,7 +191,7 @@ void Ochimono::_placeCurrentBlock() {
         // 下に落とせるだけ落とす
         uint8_t placeY  = this->_getDroppableY(p.x, p.y);
 
-        this->_board->set(p.x, placeY, this->_currentBlock->getColor());
+        this->_board->set(p.x, placeY, p.color);
     }
 }
 
@@ -191,4 +201,37 @@ uint8_t Ochimono::_getDroppableY(uint8_t x, uint8_t y) {
         y++;
     }
     return y;
+}
+
+// 消去出来るブロックがあるか？
+bool Ochimono::_canDeleteBlock() {
+    bool checked[this->height * this->width];
+
+    for (uint8_t y = 0 ; y < this->height ; y++) {
+        for (uint8_t x = 0 ; x < this->width ; x++) {
+            piece p = this->_board->get(x, y);
+            checked[y * this->width + x -1] = true;
+            if (p == piece_none)  continue;
+
+            List<BlockPiece> *sameColors    = 
+                this->_findSameColors(p, checked);
+            if (sameColors != NULL) {
+                delete sameColors;
+                return true;
+            }
+        }
+    }
+
+    // TODOちゃんと作る
+    return false;
+
+}
+
+// 消去できるブロックを消す
+void Ochimono::_deleteBlock() {
+}
+
+
+List<BlockPiece> *Ochimono::_findSameColors(piece color, bool *checked) {
+    return NULL;
 }

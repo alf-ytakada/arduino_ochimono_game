@@ -8,10 +8,6 @@ BlockPiece Block::getBlockPiece(int pos) {
     return this->blockPiece[pos];
 }
 
-piece Block::getColor() {
-    return this->color;
-}
-
 bool Block::step() {
     this->_step--;
     if (this->_step <= 0) {
