@@ -70,7 +70,7 @@ class Ochimono {
     Block *_nextBlock;
     bool _isStarted;
     bool _isGameOver;
-    bool _isDeleting;
+    bool _isErasing;
 
     // ブロックをランダム生成
     Block *_generateBlock();
@@ -89,9 +89,13 @@ class Ochimono {
     // 配置可能なY座標の最大値
     uint8_t _getDroppableY(uint8_t x, uint8_t y);
     // 消去出来るブロックがあるか？
-    bool _canDeleteBlock();
+    bool _hasErasableBlock();
+    // 消去できるブロックを取得
+    List<BlockPiece> *_getErasableBlock();
     // 消去できるブロックを消す
-    void _deleteBlock();
+    void _eraseBlock();
+    // 指定座標の周りの同じ色のブロックを返す
+    List<BlockPiece> *_getAroundSameColor(uint8_t x, uint8_t y, bool *checked);
     // 消去できるブロックの一覧を返す
     List<BlockPiece> *_findSameColors(piece color, bool *checked);
     

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Block.h"
 
 
 template<typename T>
@@ -37,7 +38,6 @@ void List<T>::push(T t) {
 
 template<typename T>
 T List<T>::pop() {
-    T ret;
     if (this->_tail == this->_array) {
         this->_tail = &(this->_array[this->_arraySize -1]);
     }
@@ -53,3 +53,5 @@ T List<T>::pop() {
 //}
 
 
+// Žg‚¤ƒNƒ‰ƒX
+template class List<BlockPiece>;

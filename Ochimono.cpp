@@ -14,7 +14,7 @@ void Ochimono::init() {
     }
     this->_isStarted   = false;
     this->_isGameOver  = false;
-    this->_isDeleting  = false;
+    this->_isErasing   = false;
 
     this->redrawBoard       = true;
     this->redrawNextBlock   = true;
@@ -34,7 +34,7 @@ void Ochimono::mainLoop() {
 
     if (this->_isGameOver)   return this->_gameOver();
 
-    if (this->_isDeleting)   return this->_deleteBlock();
+    if (this->_isErasing)   return this->_eraseBlock();
 
     bool stepped    = this->_currentBlock->step();
     if (stepped) {
@@ -49,9 +49,9 @@ void Ochimono::mainLoop() {
     // 衝突判定
     if (this->_isCollided(this->_currentBlock)) {
         this->_collisionHandler();
-        if (this->_canDeleteBlock()) {
+        if (this->_hasErasableBlock()) {
             // 削除出来るものがあったら、削除シーケンスへ
-            this->_isDeleting = true;
+            this->_isErasing = true;
         }
         this->redrawBoard   = true;
         this->redrawCurrentBlock    = true;
@@ -203,35 +203,127 @@ uint8_t Ochimono::_getDroppableY(uint8_t x, uint8_t y) {
     return y;
 }
 
+#include <Arduino.h>
 // 消去出来るブロックがあるか？
-bool Ochimono::_canDeleteBlock() {
-    bool checked[this->height * this->width];
+bool Ochimono::_hasErasableBlock() {
+    auto *blocks    = this->_getErasableBlock();
+    if (blocks == NULL) {
+        Serial.println("no erasable blocks");
+        return false;
+    }
+    delete blocks;
+    Serial.println("yes erasable blocks");
+    return true;
+}
+
+
+List<BlockPiece> *Ochimono::_getErasableBlock() {
+    List<BlockPiece> *ret   = new List<BlockPiece>(16);
+    bool checked[this->height * this->width]    = {false};
 
     for (uint8_t y = 0 ; y < this->height ; y++) {
         for (uint8_t x = 0 ; x < this->width ; x++) {
-            piece p = this->_board->get(x, y);
-            checked[y * this->width + x -1] = true;
-            if (p == piece_none)  continue;
 
-            List<BlockPiece> *sameColors    = 
-                this->_findSameColors(p, checked);
-            if (sameColors != NULL) {
-                delete sameColors;
-                return true;
+            piece color = this->_board->get(x, y);
+            uint8_t pos = y * this->width + x;
+            checked[pos]    = true;
+            if (color == piece_none)  continue;
+
+            // とりあえず16個分メモリ確保
+            List<BlockPiece> sameColors(16);
+            sameColors.push(BlockPiece(x, y, color));
+
+            while (sameColors.size() > 0) {
+                Serial.println(sameColors.size());
+                BlockPiece bp   = sameColors.pop();
+                ret->push(bp);
+                // 周りの同じ色のブロックをチェック
+                List<BlockPiece> *aroundSameColors    = 
+                    this->_getAroundSameColor(bp.x, bp.y, checked);
+
+                // 同じ色のブロック群をチェック対象に追加
+                while (aroundSameColors->size() > 0) {
+                    sameColors.push(aroundSameColors->pop());
+                }
+                delete aroundSameColors;
+            }
+
+            if (ret->size() >= 4) {
+                return ret;
+            }
+            ret->clear();
+        }
+    }
+
+    delete ret;
+    return NULL;
+}
+
+// 消去できるブロックを消す
+void Ochimono::_eraseBlock() {
+    auto *blocks    = this->_getErasableBlock();
+
+    while (blocks->size() > 0) {
+        BlockPiece bp   = blocks->pop();
+        // 消す
+        Serial.println(String("delete x = ") + bp.x + ", y = " + bp.y);
+        this->_board->set(bp.x, bp.y, piece_none);
+    }
+
+    // 空白部分より上にブロックが有るなら全部落とす
+    for (uint8_t x = 0 ; x < this->width ; x++) {
+        for (int8_t y = this->height -1 ; y >= 0 ; y--) {
+            Serial.println(String("(") + x + "," + y + ")");
+            piece color = this->_board->get(x, y);
+            if (color != piece_none) continue;
+            // 上にブロックある？
+            for (int8_t upperY = y-1 ; upperY >= 0 ; upperY--) {
+                piece upperColor    = this->_board->get(x, upperY);
+                if (upperColor != piece_none) {
+                    // 見つけたので、動かす
+                    this->_board->set(x, y, upperColor);
+                    this->_board->set(x, upperY, piece_none);
+                    break;
+                }
             }
         }
     }
 
-    // TODOちゃんと作る
-    return false;
-
+    delete blocks;
+    // 削除完了とする
+    this->_isErasing    = false;
+    this->redrawBoard   = true;
+    this->redrawCurrentBlock    = true;
 }
 
-// 消去できるブロックを消す
-void Ochimono::_deleteBlock() {
-}
+// 指定した位置のブロックの周りをチェックし、
+// 同じ色の座標一覧を返す
+List<BlockPiece> *Ochimono::_getAroundSameColor(uint8_t x, uint8_t y, bool *checked) {
+    List<BlockPiece> *ret    = new List<BlockPiece>(4);
 
+    piece color = this->_board->get(x, y);
+    checked[y * this->width + x] = true;
+
+
+    // 上 下 左 右 の差分
+    uint8_t diffX[]  = {0,  0, -1, 1};
+    uint8_t diffY[]  = {-1, 1,  0, 0};
+
+    for (int i = 0 ; i < 4 ; i++) {
+        uint8_t cx  = x + diffX[i];
+        uint8_t cy  = y + diffY[i];
+        if (checked[cy * this->width + cx])  continue;
+
+        if (this->_board->get(cx, cy)  == color) {
+            ret->push(BlockPiece(cx, cy, color));
+            checked[cy * this->width + cx] = true;
+        }
+    }
+
+    return ret;
+}
 
 List<BlockPiece> *Ochimono::_findSameColors(piece color, bool *checked) {
+
     return NULL;
 }
