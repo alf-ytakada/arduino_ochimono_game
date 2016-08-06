@@ -71,6 +71,10 @@ void Ochimono::moveBlock(direction dir) {
         // 下方向移動だったなら配置する
         if (dir == dir_down) {
             this->_collisionHandler();
+            if (this->_hasErasableBlock()) {
+                // 削除出来るものがあったら、削除シーケンスへ
+                this->_isErasing = true;
+            }
         }
         // それ以外ならば単純に位置を戻す
         else {
@@ -219,7 +223,11 @@ bool Ochimono::_hasErasableBlock() {
 
 List<BlockPiece> *Ochimono::_getErasableBlock() {
     List<BlockPiece> *ret   = new List<BlockPiece>(16);
-    bool checked[this->height * this->width]    = {false};
+    //bool checked[this->height * this->width]    = {false};
+    bool *checked = new bool[this->height * this->width];
+    for (int i = 0 ; i < this->height * this->width ; i++) {
+        checked[i]  = false;
+    }
 
     for (uint8_t y = 0 ; y < this->height ; y++) {
         for (uint8_t x = 0 ; x < this->width ; x++) {
@@ -249,12 +257,14 @@ List<BlockPiece> *Ochimono::_getErasableBlock() {
             }
 
             if (ret->size() >= 4) {
+                delete checked;
                 return ret;
             }
             ret->clear();
         }
     }
 
+    delete checked;
     delete ret;
     return NULL;
 }
@@ -290,8 +300,10 @@ void Ochimono::_eraseBlock() {
     }
 
     delete blocks;
-    // 削除完了とする
-    this->_isErasing    = false;
+    if (! this->_hasErasableBlock()) {
+        // 削除完了とする
+        this->_isErasing    = false;
+    }
     this->redrawBoard   = true;
     this->redrawCurrentBlock    = true;
 }
