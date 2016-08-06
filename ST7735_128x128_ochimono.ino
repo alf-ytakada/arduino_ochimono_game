@@ -24,8 +24,11 @@
 
 TFT_ST7735 tft = TFT_ST7735(__CS1, __DC);
 
-Ochimono game = Ochimono(6, 12);
-Drawer drawer = Drawer(&tft);;
+// 盤のサイズ
+const uint8_t boardWidth  = 6;
+const uint8_t boardHeight = 12;
+Ochimono game = Ochimono(boardWidth, boardHeight);
+Drawer drawer = Drawer(&tft, boardWidth, boardHeight);
 
 void setup() {
   // put your setup code here, to run once:
@@ -51,18 +54,18 @@ void setup() {
 // ボタンが押されたか？
 int last_pressed_times[14] = {0};
 bool pressing[14] = {false};
-bool pressed(int pin) {
+bool is_pressed(int pin) {
   int now = millis();
   int hl  = digitalRead(pin);
   if (hl == LOW) {
     if (pressing[pin] == false && now - last_pressed_times[pin] > 50) {
       // 50ms立っているならば押したとする
       pressing[pin] = true;
-      last_pressed_times[pin] = now;
+      last_pressed_times[pin] = now + 100;
       return true;
     }
     else {
-      last_pressed_times[pin] = now;
+      //last_pressed_times[pin] = now;
     }
   }
   else {
@@ -72,21 +75,33 @@ bool pressed(int pin) {
 }
 
 
+// ボタンが押し続けられたか？
+// キーリピート的な動き
+bool is_pressing(int pin) {
+  int now = millis();
+  int hl  = digitalRead(pin);
+  if (hl == LOW && pressing[pin] && (now - last_pressed_times[pin]) > 100) {
+     last_pressed_times[pin]  = now;
+     return true;
+  }
+  return false;
+}
+
 int cnt = 0;
 int pre = millis();
 
 void loop() {
   cnt++;
-  if (pressed(PIN_LEFT)) {
+  if (is_pressed(PIN_LEFT) || is_pressing(PIN_LEFT)) {
     game.moveBlock(dir_left);
   }
-  if (pressed(PIN_DOWN)) {
+  if (is_pressed(PIN_DOWN) || is_pressing(PIN_DOWN)) {
     game.moveBlock(dir_down);
   }
-  if (pressed(PIN_RIGHT)) {
+  if (is_pressed(PIN_RIGHT) || is_pressing(PIN_RIGHT)) {
     game.moveBlock(dir_right);
   }
-  if (pressed(PIN_ROTATE)) {
+  if (is_pressed(PIN_ROTATE)) {
     game.rotateBlock(dir_right);
   }
   
@@ -102,6 +117,12 @@ void loop() {
   if (game.redrawNextBlock) {
     drawer.drawNextBlock(game.getNextBlock());
     game.redrawNextBlock  = false;
+  }
+  if (game.isGameOver()) {
+    drawer.drawGameOver();
+  }
+  if (game.isErasing()) {
+    drawer.drawChain(game.currentChain());
   }
   delay(10);
   int now = millis();

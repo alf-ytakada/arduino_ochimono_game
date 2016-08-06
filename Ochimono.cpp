@@ -1,4 +1,5 @@
 #include "Ochimono.h"
+#include <Arduino.h>
 
 
 void Ochimono::init() {
@@ -12,9 +13,9 @@ void Ochimono::init() {
     if (this->_nextBlock) {
         delete this->_nextBlock;
     }
-    this->_isStarted   = false;
-    this->_isGameOver  = false;
-    this->_isErasing   = false;
+
+    this->_state    = gs_before_start;
+    this->_chain    = 0;
 
     this->redrawBoard       = true;
     this->redrawNextBlock   = true;
@@ -23,39 +24,100 @@ void Ochimono::init() {
 
 
 void Ochimono::start() {
-    this->_isStarted   = true;
+    this->_changeStateTo(gs_start);
 
     this->_nextBlock    = this->_generateBlock();
     this->_dropNextBlock();
+    this->_changeStateTo(gs_block_dropping);
 }
 
 void Ochimono::mainLoop() {
-    if (! this->_isStarted)  return;
 
-    if (this->_isGameOver)   return this->_gameOver();
-
-    if (this->_isErasing)   return this->_eraseBlock();
-
-    bool stepped    = this->_currentBlock->step();
-    if (stepped) {
-        this->redrawCurrentBlock  = true;
-        this->redrawBoard   = true;
-    }
-    // ゲームオーバー判定
-    if (! this->_canContinue()) {
-        this->_isGameOver   = true;
-    }
-
-    // 衝突判定
-    if (this->_isCollided(this->_currentBlock)) {
-        this->_collisionHandler();
-        if (this->_hasErasableBlock()) {
-            // 削除出来るものがあったら、削除シーケンスへ
-            this->_isErasing = true;
+    switch (this->_state) {
+        //////////////////////////////////////
+        case gs_block_dropping:
+        {
+            bool stepped    = this->_currentBlock->step();
+            if (stepped) {
+                this->redrawCurrentBlock  = true;
+                this->redrawBoard   = true;
+            }
+            // ゲームオーバー判定
+            if (! this->_canContinue()) {
+                this->_changeStateTo(gs_gameover);
+                break;
+            }
+            // 衝突判定
+            if (this->_isCollided(this->_currentBlock)) {
+                this->_collisionHandler();
+                this->_changeStateTo(gs_block_placed);
+                break;
+            }
         }
-        this->redrawBoard   = true;
-        this->redrawCurrentBlock    = true;
-        this->redrawNextBlock    = true;
+            break;
+
+        //////////////////////////////////////
+        case gs_block_placed:
+        {
+            if (this->_hasErasableBlock()) {
+                // 削除出来るものがあったら、削除シーケンスへ
+                this->_changeStateTo(gs_block_erasing);
+            }
+            else {
+                // 次のBlockを配置する
+                this->_changeStateTo(gs_drop_next_block);
+            }
+        }
+            break;
+
+        //////////////////////////////////////
+        case gs_block_erasing:
+        {
+            this->_eraseBlock();
+            this->_chain++;
+            if (! this->_hasErasableBlock()) {
+                // 削除完了とする
+                this->_changeStateTo(gs_drop_next_block);
+            }
+            else {
+                // この回数分,落とすのを遅延させる
+                this->_waitErasing  = 10;
+                this->_changeStateTo(gs_block_wait_next_erasing);
+            }
+            this->redrawBoard   = true;
+        }
+            break;
+
+        //////////////////////////////////////
+        case gs_block_wait_next_erasing:
+        {
+            this->_waitErasing--;
+            if (this->_waitErasing <= 0) {
+                this->_changeStateTo(gs_block_erasing);
+            }
+        }
+            break;
+
+
+        //////////////////////////////////////
+        case gs_drop_next_block:
+            {
+                this->_chain    = 0;
+                // 次のBlockを配置する
+                this->_dropNextBlock();
+                this->redrawBoard       = true;
+                this->redrawNextBlock   = true;
+                this->redrawCurrentBlock    = true;
+                this->_changeStateTo(gs_block_dropping);
+            }
+            break;
+
+        //////////////////////////////////////
+        case gs_gameover:
+            this->_gameOver();
+            break;
+
+
     }
 
 }
@@ -65,25 +127,28 @@ void Ochimono::pause(bool is_pause) {
 }
 
 void Ochimono::moveBlock(direction dir) {
+
+    if (! this->_state == gs_block_dropping) {
+        return;
+    }
+    
     this->_currentBlock->move(dir);
 
     if (this->_isCollided(this->_currentBlock)) {
         // 下方向移動だったなら配置する
         if (dir == dir_down) {
             this->_collisionHandler();
-            if (this->_hasErasableBlock()) {
-                // 削除出来るものがあったら、削除シーケンスへ
-                this->_isErasing = true;
-            }
+            this->_changeStateTo(gs_block_placed);
         }
         // それ以外ならば単純に位置を戻す
         else {
             this->_currentBlock->undo();
         }
     }
-    this->redrawBoard   = true;
-    this->redrawCurrentBlock    = true;
-    this->redrawNextBlock    = true;
+    else {
+        this->redrawBoard           = true;
+        this->redrawCurrentBlock    = true;
+    }
 }
 
 void Ochimono::rotateBlock(direction dir) {
@@ -94,7 +159,7 @@ void Ochimono::rotateBlock(direction dir) {
             this->_currentBlock->rotate((dir == dir_left) ? dir_right : dir_left);
         }
         else {
-            this->redrawBoard   = true;
+            this->redrawBoard           = true;
             this->redrawCurrentBlock    = true;
         }
     }
@@ -114,6 +179,12 @@ Block *Ochimono::getNextBlock() {
 
 ///////////////////
 // private method
+
+void Ochimono::_changeStateTo(game_state newState) {
+    this->_state    = newState;
+}
+
+
 Block *Ochimono::_generateBlock() {
     uint8_t color1   = 1 + rand() % (piece_end -1);
     uint8_t color2   = 1 + rand() % (piece_end -1);
@@ -125,8 +196,21 @@ Block *Ochimono::_generateBlock() {
     return new Block(2, 0, pc1, pc2, lv);
 }
 
+bool Ochimono::isErasing() {
+    return 
+        (
+            this->_state == gs_block_erasing ||
+            this->_state == gs_block_wait_next_erasing ||
+            (this->_state == gs_drop_next_block && this->_chain > 0)
+        );
+}
+
+uint8_t Ochimono::currentChain() {
+    return this->_chain;
+}
+
 bool Ochimono::isGameOver() {
-    return this->_isGameOver;
+    return this->_state == gs_gameover;
 }
 
 void Ochimono::_dropNextBlock() {
@@ -165,8 +249,6 @@ void Ochimono::_collisionHandler() {
     this->_currentBlock->undo();
     // 配置する
     this->_placeCurrentBlock();
-    // 次のBlockを配置する
-    this->_dropNextBlock();
 
 }
 
@@ -207,7 +289,6 @@ uint8_t Ochimono::_getDroppableY(uint8_t x, uint8_t y) {
     return y;
 }
 
-#include <Arduino.h>
 // 消去出来るブロックがあるか？
 bool Ochimono::_hasErasableBlock() {
     auto *blocks    = this->_getErasableBlock();
@@ -242,7 +323,6 @@ List<BlockPiece> *Ochimono::_getErasableBlock() {
             sameColors.push(BlockPiece(x, y, color));
 
             while (sameColors.size() > 0) {
-                Serial.println(sameColors.size());
                 BlockPiece bp   = sameColors.pop();
                 ret->push(bp);
                 // 周りの同じ色のブロックをチェック
@@ -300,12 +380,6 @@ void Ochimono::_eraseBlock() {
     }
 
     delete blocks;
-    if (! this->_hasErasableBlock()) {
-        // 削除完了とする
-        this->_isErasing    = false;
-    }
-    this->redrawBoard   = true;
-    this->redrawCurrentBlock    = true;
 }
 
 // 指定した位置のブロックの周りをチェックし、

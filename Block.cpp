@@ -34,6 +34,7 @@ void Block::move(direction dir) {
     }
     else if (dir == dir_down) {
         dy  = 1;
+        this->_step = this->defaultStep;
     }
 
     x   += dx;

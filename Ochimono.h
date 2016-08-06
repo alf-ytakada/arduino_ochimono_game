@@ -7,6 +7,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// ゲームの状態
+enum game_state {
+    gs_before_start,
+    gs_start,
+    gs_block_dropping,
+    gs_block_placed,
+    gs_block_erasing,
+    gs_block_wait_next_erasing,
+    gs_drop_next_block,
+    gs_gameover,
+};
+
 
 // ゲーム本体
 // 描画は描画クラスに任せる
@@ -53,6 +65,12 @@ class Ochimono {
 
     // ゲームオーバー？
     bool isGameOver();
+
+    // ブロック消去中？
+    bool isErasing();
+
+    // チェイン数を取得
+    uint8_t currentChain();
     //////////////////
 
     //////////////////
@@ -68,10 +86,15 @@ class Ochimono {
     Board *_board;
     Block *_currentBlock;
     Block *_nextBlock;
-    bool _isStarted;
-    bool _isGameOver;
-    bool _isErasing;
+    // 現在の状態
+    game_state _state;
+    // チェイン数
+    uint8_t _chain;
+    // 次のブロック消去待ち時間
+    int8_t _waitErasing;
 
+    // ゲーム状態遷移
+    void _changeStateTo(game_state newState);
     // ブロックをランダム生成
     Block *_generateBlock();
     // 次のブロックを画面に配置
