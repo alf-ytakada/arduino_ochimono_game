@@ -54,4 +54,8 @@ T List<T>::pop() {
 
 
 // Žg‚¤ƒNƒ‰ƒX
-template class List<BlockPiece>;
+//template class List<BlockPiece>;
+template void  List<BlockPiece>::push(BlockPiece);
+template BlockPiece  List<BlockPiece>::pop();
+template uint8_t  List<BlockPiece>::size();
+template void List<BlockPiece>::clear();
