@@ -9,13 +9,16 @@ void Ochimono::init() {
     this->_board    = new Board(this->width, this->height);
     if (this->_currentBlock) {
         delete this->_currentBlock;
+        this->_currentBlock = NULL;
     }
     if (this->_nextBlock) {
         delete this->_nextBlock;
+        this->_nextBlock    = NULL;
     }
 
     this->_state    = gs_before_start;
     this->_chain    = 0;
+    this->_score    = 0;
 
     this->redrawBoard       = true;
     this->redrawNextBlock   = true;
@@ -75,6 +78,7 @@ void Ochimono::mainLoop() {
         {
             this->_eraseBlock();
             this->_chain++;
+            this->_score    += ceil(pow(2, this->_chain -1)) * 10;
             if (! this->_hasErasableBlock()) {
                 // 削除完了とする
                 this->_changeStateTo(gs_drop_next_block);
@@ -128,7 +132,8 @@ void Ochimono::pause(bool is_pause) {
 
 void Ochimono::moveBlock(direction dir) {
 
-    if (! this->_state == gs_block_dropping) {
+    if (! (this->_state == gs_block_dropping)) {
+        Serial.println("not dropping state, skip");
         return;
     }
     
@@ -209,6 +214,10 @@ uint8_t Ochimono::currentChain() {
     return this->_chain;
 }
 
+long Ochimono::currentScore() {
+    return this->_score;
+}
+
 bool Ochimono::isGameOver() {
     return this->_state == gs_gameover;
 }
@@ -237,6 +246,8 @@ bool Ochimono::_isCollided(Block *block) {
     int i;
     for (i = 0 ; i < block->size() ; i++) {
         BlockPiece p    = block->getBlockPiece(i);
+        // ボードの上部超えを許す
+        if (p.y < 0)  continue;
         if (this->_board->get(p.x, p.y) != piece_none) {
             return true;
         }
@@ -279,6 +290,7 @@ void Ochimono::_placeCurrentBlock() {
 
         this->_board->set(p.x, placeY, p.color);
     }
+    delete ySortedIdx;
 }
 
 

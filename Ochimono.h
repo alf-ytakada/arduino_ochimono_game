@@ -71,6 +71,9 @@ class Ochimono {
 
     // チェイン数を取得
     uint8_t currentChain();
+
+    // スコアを取得
+    long currentScore();
     //////////////////
 
     //////////////////
@@ -90,6 +93,8 @@ class Ochimono {
     game_state _state;
     // チェイン数
     uint8_t _chain;
+    // スコア
+    long  _score;
     // 次のブロック消去待ち時間
     int8_t _waitErasing;
 

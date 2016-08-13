@@ -28,6 +28,8 @@ class Drawer {
     void drawCurrentBlock(Block *block);
     void drawNextBlock(Block *block);
     void drawChain(uint8_t chainCount);
+    void drawScore(long score);
+    void drawMaxScore(long score);
     void drawGameOver();
 
   private:

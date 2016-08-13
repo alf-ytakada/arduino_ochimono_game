@@ -6,11 +6,11 @@
 
 class BlockPiece {
   public:
-    uint8_t x;
-    uint8_t y;
+    int8_t x;
+    int8_t y;
     piece color;
     BlockPiece(){};
-    BlockPiece(uint8_t x, uint8_t y, piece color) : x(x), y(y), color(color) {};
+    BlockPiece(int8_t x, int8_t y, piece color) : x(x), y(y), color(color) {};
     BlockPiece(const BlockPiece &p) { this->x = p.x; this->y = p.y; this->color = p.color; };
 };
 

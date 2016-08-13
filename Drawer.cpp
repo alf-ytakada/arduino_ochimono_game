@@ -85,6 +85,30 @@ void Drawer::drawChain(uint8_t chainCount) {
     this->tft->println(String(chainCount) + " chain!");
 }
 
+void Drawer::drawScore(long score) {
+    uint8_t x   = this->_boardWidth * this->_blockSize  + 10;
+    uint8_t y   = this->_blockSize  * 10;
+
+    // 一旦背景で塗りつぶす サイズは適当。
+    this->tft->fillRect(x, y, this->_blockSize * 7, this->_blockSize, this->tft->getBackground());
+
+    this->tft->setCursor(x, y);
+    this->tft->setTextColor(WHITE);
+    this->tft->println(String("score: ") + score);
+}
+
+void Drawer::drawMaxScore(long score) {
+    uint8_t x   = this->_boardWidth * this->_blockSize  + 10;
+    uint8_t y   = this->_blockSize  * 11;
+
+    // 一旦背景で塗りつぶす サイズは適当。
+    this->tft->fillRect(x, y, this->_blockSize * 7, this->_blockSize, this->tft->getBackground());
+
+    this->tft->setCursor(x, y);
+    this->tft->setTextColor(WHITE);
+    this->tft->println(String("MAX: ") + score);
+}
+
 void Drawer::drawGameOver() {
     // game over
     uint8_t boardCenterX    = this->_boardWidth  / 2;
