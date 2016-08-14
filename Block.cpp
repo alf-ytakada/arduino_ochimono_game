@@ -47,6 +47,12 @@ void Block::move(direction dir) {
     this->_movedDir = dir;
 }
 
+void Block::swap() {
+    piece color = this->blockPiece[0].color;
+    this->blockPiece[0].color   = this->blockPiece[1].color;
+    this->blockPiece[1].color   = color;
+}
+
 void Block::undo() {
     if (_movedDir == dir_end)  return;
     else if (_movedDir == dir_left)   move(dir_right);

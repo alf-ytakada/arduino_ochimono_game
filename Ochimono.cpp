@@ -156,17 +156,47 @@ void Ochimono::moveBlock(direction dir) {
     }
 }
 
-void Ochimono::rotateBlock(direction dir) {
-    if (this->_currentBlock) {
-        this->_currentBlock->rotate(dir);
-        // もし回転後がヒットしちゃったら戻す
-        if (this->_isCollided(this->_currentBlock)) {
-            this->_currentBlock->rotate((dir == dir_left) ? dir_right : dir_left);
+void Ochimono::rotateBlock(direction dir, bool blockShift) {
+    if (! this->_currentBlock)  return;
+
+    this->_currentBlock->rotate(dir);
+
+    bool collided       = false;
+    bool leftExceeded   = false;
+    bool rightExceeded  = false;
+    for (int i = 0 ; i < this->_currentBlock->size() ; i++) {
+        BlockPiece p    = this->_currentBlock->getBlockPiece(i);
+        // ボードの上部超えを許す
+        if (p.y < 0)  continue;
+        if (p.x < 0)  leftExceeded  = true;
+        if (p.x > this->width -1)  rightExceeded  = true;
+
+        if (this->_board->get(p.x, p.y) != piece_none) {
+            collided    = true;
+        }
+    }
+    // もし回転後がヒットしちゃったら戻す
+    if (collided) {
+        this->_currentBlock->rotate((dir == dir_left) ? dir_right : dir_left);
+
+        if (blockShift && (leftExceeded || rightExceeded)) {
+            // 左右超えていたら、一マスずらして試す
+            if (leftExceeded)   this->moveBlock(dir_right);
+            if (rightExceeded)  this->moveBlock(dir_left);
+            if (leftExceeded || rightExceeded)  this->rotateBlock(dir, false);
         }
         else {
+            // 上下回転する
+            // Note. swap()だと上下回転し続けるので、rotate2回にした
+            this->_currentBlock->rotate(dir);
+            this->_currentBlock->rotate(dir);
             this->redrawBoard           = true;
             this->redrawCurrentBlock    = true;
         }
+    }
+    else {
+        this->redrawBoard           = true;
+        this->redrawCurrentBlock    = true;
     }
 }
 
@@ -198,7 +228,7 @@ Block *Ochimono::_generateBlock() {
 
     // TODO Lv調整
     uint8_t lv  = 100;
-    return new Block(2, 0, pc1, pc2, lv);
+    return new Block(2, -1, pc1, pc2, lv);
 }
 
 bool Ochimono::isErasing() {
@@ -243,11 +273,10 @@ void Ochimono::_gameOver () {
 }
 
 bool Ochimono::_isCollided(Block *block) {
-    int i;
-    for (i = 0 ; i < block->size() ; i++) {
+    for (int i = 0 ; i < block->size() ; i++) {
         BlockPiece p    = block->getBlockPiece(i);
         // ボードの上部超えを許す
-        if (p.y < 0)  continue;
+        if (p.y < 0 && p.x >= 0 && p.x <= this->width -1)  continue;
         if (this->_board->get(p.x, p.y) != piece_none) {
             return true;
         }

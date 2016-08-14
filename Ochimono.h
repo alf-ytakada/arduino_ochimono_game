@@ -61,7 +61,8 @@ class Ochimono {
     void moveBlock(direction dir);
 
     // ブロックを回転する
-    void rotateBlock(direction dir);
+    // blockShift : 左右枠外にかかった場合、1マスシフトして回転させるか否か
+    void rotateBlock(direction dir, bool blockShift = true);
 
     // ゲームオーバー？
     bool isGameOver();

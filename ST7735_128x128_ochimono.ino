@@ -16,11 +16,11 @@
 #define __DC  9
 
 //#define PIN_UP    2
-#define PIN_LEFT  3
-#define PIN_DOWN  4
-#define PIN_RIGHT 5
+#define PIN_LEFT  5
+#define PIN_DOWN  6
+#define PIN_RIGHT 7
 
-#define PIN_ROTATE  6
+#define PIN_ROTATE  8
 
 
 TFT_ST7735 tft = TFT_ST7735(__CS1, __DC);
@@ -90,37 +90,45 @@ void setup() {
 }
 
 // ボタンが押されたか？
-int last_pressed_times[14] = {0};
+int32_t last_pressed_times[14] = {0};
 bool pressing[14] = {false};
+bool pressed[14]  = {false};
 bool is_pressed(int pin) {
-  int now = millis();
+  int32_t now = millis();
   int hl  = digitalRead(pin);
   if (hl == LOW) {
-    if (pressing[pin] == false && now - last_pressed_times[pin] > 50) {
-      // 50ms立っているならば押したとする
-      pressing[pin] = true;
-      last_pressed_times[pin] = now + 100;
+    if (pressed[pin] == false && pressing[pin] == true && now - last_pressed_times[pin] > 30) {
+      // 30ms立っているならば押したとする
+      last_pressed_times[pin] = now + 200;
+      pressed[pin]  = true;
       return true;
     }
-    else {
-      //last_pressed_times[pin] = now;
+    else if (pressing[pin] == false) {
+      last_pressed_times[pin] = now;
+      pressing[pin] = true;
     }
   }
   else {
     pressing[pin] = false;
+    pressed[pin]  = false;
   }
   return false;
 }
 
 
 // ボタンが押し続けられたか？
-// キーリピート的な動き
-bool is_pressing(int pin) {
-  int now = millis();
+// waitRepeat: キーリピート的な動き。
+bool is_pressing(int pin, bool waitRepeat = true) {
+  int32_t now = millis();
   int hl  = digitalRead(pin);
-  if (hl == LOW && pressing[pin] && (now - last_pressed_times[pin]) > 100) {
-     //last_pressed_times[pin]  = now;
-     return true;
+  if (hl == LOW && pressed[pin]) {
+    if (waitRepeat && now - last_pressed_times[pin] > 100) {
+      last_pressed_times[pin] = now + 30;
+      return true;
+    }
+    if (!waitRepeat) {
+      return true;
+    }
   }
   return false;
 }
@@ -134,32 +142,44 @@ bool isSavedScore = false;
 
 void loop() {
   cnt++;
-  if (is_pressed(PIN_LEFT) || is_pressing(PIN_LEFT)) {
+
+  /////////////////////////////////
+  // キー入力処理
+  bool pressed_left   = is_pressed(PIN_LEFT);
+  bool pressing_left  = is_pressing(PIN_LEFT);
+  bool pressed_right  = is_pressed(PIN_RIGHT);
+  bool pressing_rignt = is_pressing(PIN_RIGHT);
+  bool pressed_down   = is_pressed(PIN_DOWN);
+  bool pressing_down  = is_pressing(PIN_DOWN);
+  
+  if (pressed_left || pressing_left) {
     game.moveBlock(dir_left);
   }
-  if (is_pressed(PIN_DOWN) || is_pressing(PIN_DOWN)) {
+  if (pressed_down || pressing_down) {
     game.moveBlock(dir_down);
   }
-  if (is_pressed(PIN_RIGHT) || is_pressing(PIN_RIGHT)) {
+  if (pressed_right || pressing_rignt) {
     game.moveBlock(dir_right);
   }
   if (is_pressed(PIN_ROTATE)) {
     game.rotateBlock(dir_right);
   }
 
+  /////////////////////////////////
   // リセット
-  if (is_pressing(PIN_LEFT) && is_pressing(PIN_DOWN) && is_pressing(PIN_RIGHT)) {
+  if (is_pressing(PIN_LEFT, false) && is_pressing(PIN_DOWN, false) && is_pressing(PIN_RIGHT, false)) {
     Serial.println("reset");
     game.init();
     game.start();
     tft.clearScreen();
     isSavedScore  = false;
     drawer.drawScore(game.currentScore());
-    drawer.drawScore(maxScore);
+    drawer.drawMaxScore(maxScore);
     delay(300);
     return;
   }
   
+  /////////////////////////////////
   game.mainLoop();
   if (game.redrawBoard) {
     drawer.drawBoard(game.getBoard());
@@ -178,7 +198,7 @@ void loop() {
   if (game.isGameOver()) {
     drawer.drawGameOver();
     // 最大スコア記録ならば記録
-    if (true || (!isSavedScore) && game.currentScore() > maxScore) {
+    if ((!isSavedScore) && game.currentScore() > maxScore) {
       maxScore  = game.currentScore();
       writeEEPROM(0, maxScore);
       isSavedScore  = true;

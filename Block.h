@@ -25,7 +25,7 @@ class Block {
 
     // コンストラクタ
     // (x,y) = 初期座標、 piece = 色、 step = 落ちる速度 小さいほどすぐ落ちる
-    Block(uint8_t x, uint8_t y, piece p1, piece p2, uint8_t step) {
+    Block(int8_t x, int8_t y, piece p1, piece p2, uint8_t step) {
         this->x = x;
         this->y = y;
         blockPiece[0].x = x;
@@ -57,6 +57,9 @@ class Block {
     // 回転
     // dir_left, dir_rightのみ対応
     void rotate(direction dir);
+
+    // 上下反転
+    void swap();
 
   private:
     direction _movedDir;
