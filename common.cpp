@@ -53,7 +53,7 @@ T List<T>::pop() {
 //}
 
 
-// g‚¤ƒNƒ‰ƒX
+// ä½¿ã†ã‚¯ãƒ©ã‚¹
 //template class List<BlockPiece>;
 template void  List<BlockPiece>::push(BlockPiece);
 template BlockPiece  List<BlockPiece>::pop();
